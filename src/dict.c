@@ -689,7 +689,7 @@ static int dictGenericDelete(dict *d, const void *key, int nofree)
                 else
                     d->ht[table].table[idx] = he->next;
 
-                // 释放调用键和值的释放函数？
+                // 调用键和值的释放函数
                 if (!nofree) {
                     dictFreeKey(d, he);
                     dictFreeVal(d, he);
