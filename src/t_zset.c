@@ -208,8 +208,8 @@ zskiplistNode *zslInsert(zskiplist *zsl, double score, robj *obj) {
     for (i = zsl->level-1; i >= 0; i--) {
 
         /* store rank that is crossed to reach the insert position */
-        // 如果 i 不是 zsl->level-1 层
-        // 那么 i 层的起始 rank 值为 i+1 层的 rank 值
+        // rank[i]用来记录第i层达到插入位置的所跨越的节点总数，也就是该层插入新节点的前序节点的排名
+        // rank[i]初始化为上一层所跨越的节点总数
         // 各个层的 rank 值一层层累积
         // 最终 rank[0] 的值加一就是新节点的前置节点的排位
         // rank[0] 会在后面成为计算 span 值和 rank 值的基础
@@ -217,6 +217,7 @@ zskiplistNode *zslInsert(zskiplist *zsl, double score, robj *obj) {
 
         // 沿着前进指针遍历跳跃表
         // T_wrost = O(N^2), T_avg = O(N log N)
+        // 最终找到的x 节点是新插入节点的前序节点
         while (x->level[i].forward &&
             (x->level[i].forward->score < score ||
                 // 比对分值
@@ -231,6 +232,7 @@ zskiplistNode *zslInsert(zskiplist *zsl, double score, robj *obj) {
             x = x->level[i].forward;
         }
         // 记录将要和新节点相连接的节点
+        // update[i] 节点都是新插入节点的前序节点
         update[i] = x;
     }
 
@@ -247,16 +249,17 @@ zskiplistNode *zslInsert(zskiplist *zsl, double score, robj *obj) {
     // T = O(N)
     level = zslRandomLevel();
 
-    // 如果新节点的层数比表中其他节点的层数都要大
+    // 如果新节点的层数比表中其他节点的层数都要大，则需要升级
     // 那么初始化表头节点中未使用的层，并将它们记录到 update 数组中
     // 将来也指向新节点
     if (level > zsl->level) {
 
         // 初始化未使用层
-        // T = O(1)
+        // T = O(N)
         for (i = zsl->level; i < level; i++) {
             rank[i] = 0;
             update[i] = zsl->header;
+            //直接指向尾节点，所以跨度span为总长度length
             update[i]->level[i].span = zsl->length;
         }
 
@@ -268,7 +271,7 @@ zskiplistNode *zslInsert(zskiplist *zsl, double score, robj *obj) {
     x = zslCreateNode(level,score,obj);
 
     // 将前面记录的指针指向新节点，并做相应的设置
-    // T = O(1)
+    // T = O(N)
     for (i = 0; i < level; i++) {
         
         // 设置新节点的 forward 指针
@@ -281,14 +284,14 @@ zskiplistNode *zslInsert(zskiplist *zsl, double score, robj *obj) {
         // 计算新节点跨越的节点数量
         x->level[i].span = update[i]->level[i].span - (rank[0] - rank[i]);
 
-        // 更新新节点插入之后，沿途节点的 span 值
+        // 更新新节点插入之后，前序节点的 span 值
         // 其中的 +1 计算的是新节点
         update[i]->level[i].span = (rank[0] - rank[i]) + 1;
     }
 
     /* increment span for untouched levels */
     // 未接触的节点的 span 值也需要增一，这些节点直接从表头指向新节点
-    // T = O(1)
+    // T = O(N)
     for (i = level; i < zsl->level; i++) {
         update[i]->level[i].span++;
     }
