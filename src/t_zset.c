@@ -314,13 +314,13 @@ zskiplistNode *zslInsert(zskiplist *zsl, double score, robj *obj) {
  * 内部删除函数，
  * 被 zslDelete 、 zslDeleteRangeByScore 和 zslDeleteByRank 等函数调用。
  *
- * T = O(1)
+ * T = O(N)   N是zsl的总层数level
  */
 void zslDeleteNode(zskiplist *zsl, zskiplistNode *x, zskiplistNode **update) {
     int i;
 
     // 更新所有和被删除节点 x 有关的节点的指针，解除它们之间的关系
-    // T = O(1)
+    // T = O(N)
     for (i = 0; i < zsl->level; i++) {
         if (update[i]->level[i].forward == x) {
             update[i]->level[i].span += x->level[i].span - 1;
@@ -338,7 +338,7 @@ void zslDeleteNode(zskiplist *zsl, zskiplistNode *x, zskiplistNode **update) {
     }
 
     // 更新跳跃表最大层数（只在被删除节点是跳跃表中最高的节点时才执行）
-    // T = O(1)
+    // T = O(N)
     while(zsl->level > 1 && zsl->header->level[zsl->level-1].forward == NULL)
         zsl->level--;
 
