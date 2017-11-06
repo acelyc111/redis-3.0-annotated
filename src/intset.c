@@ -72,7 +72,7 @@ static int64_t _intsetGetEncoded(intset *is, int pos, uint8_t enc) {
 
     // ((ENCODING*)is->contents) 首先将数组转换回被编码的类型
     // 然后 ((ENCODING*)is->contents)+pos 计算出元素在数组中的正确位置
-    // 之后 member(&vEnc, ..., sizeof(vEnc)) 再从数组中拷贝出正确数量的字节
+    // 之后 memcpy(&vEnc, ..., sizeof(vEnc)) 再从数组中拷贝出正确数量的字节
     // 如果有需要的话， memrevEncifbe(&vEnc) 会对拷贝出的字节进行大小端转换
     // 最后将值返回
     if (enc == INTSET_ENC_INT64) {
