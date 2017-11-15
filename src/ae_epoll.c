@@ -158,7 +158,7 @@ static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
     retval = epoll_wait(state->epfd,state->events,eventLoop->setsize,
             tvp ? (tvp->tv_sec*1000 + tvp->tv_usec/1000) : -1);
 
-    // 有至少一个事件就绪？
+    // 有至少一个事件就绪
     if (retval > 0) {
         int j;
 

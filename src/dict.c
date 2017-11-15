@@ -757,6 +757,7 @@ int _dictClear(dict *d, dictht *ht, void(callback)(void *)) {
     for (i = 0; i < ht->size && ht->used > 0; i++) {
         dictEntry *he, *nextHe;
 
+        //这一段是什么意思？
         if (callback && (i & 65535) == 0) callback(d->privdata);
 
         // 跳过空索引
